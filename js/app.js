@@ -21,12 +21,34 @@ const TAB_SEQUENCE = [
 let currentTabIndex = 0;
 
 /* ==========================================================================
+   MOBILE SIDEBAR DRAWER TOGGLE ENGINE
+   ========================================================================== */
+window.toggleMobileSidebar = function(forceState) {
+  const sidebar = document.querySelector('.sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (!sidebar) return;
+  const isOpen = typeof forceState === 'boolean' ? forceState : !sidebar.classList.contains('open');
+  if (isOpen) {
+    sidebar.classList.add('open');
+    if (backdrop) backdrop.classList.add('active');
+  } else {
+    sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('active');
+  }
+};
+
+/* ==========================================================================
    GLOBAL TAB SWITCHER & APPLICATION ENGINE
    ========================================================================== */
 
 // Global Tab Switcher Function (Guarantees Instant Tab Clicking)
 window.switchTab = function(targetTab) {
   if (!targetTab) return;
+
+  // Auto-close mobile drawer when switching tabs
+  if (typeof window.toggleMobileSidebar === 'function') {
+    window.toggleMobileSidebar(false);
+  }
 
   const idx = TAB_SEQUENCE.indexOf(targetTab);
   if (idx !== -1) currentTabIndex = idx;

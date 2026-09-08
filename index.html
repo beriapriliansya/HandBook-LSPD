@@ -16,6 +16,9 @@
   <!-- TOP HEADER BAR -->
   <header class="header-bar">
     <div class="brand-section">
+      <button id="mobileMenuBtn" class="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Toggle Mobile Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
       <img src="img/lspd_logo.png" alt="LSPD Official Logo" class="brand-logo-img">
       <div class="brand-title">
         <h1 id="headerTabTitle">Beranda LSPD</h1>
@@ -76,6 +79,9 @@
       </div>
     </div>
   </header>
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="toggleMobileSidebar(false)"></div>
 
   <!-- MAIN APP CONTAINER -->
   <div class="app-container">

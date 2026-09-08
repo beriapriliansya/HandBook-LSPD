@@ -3385,3 +3385,265 @@ textarea.search-box::placeholder {
     font-weight: 700 !important;
   }
 }
+
+/* ==========================================================================
+   ADVANCED RESPONSIVE DESIGN SYSTEM (MOBILE, TABLET & DESKTOP)
+   ========================================================================== */
+
+/* Hamburger Toggle Button & Off-Canvas Backdrop */
+.mobile-menu-btn {
+  display: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 1.1rem;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  z-index: 9998;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.sidebar-backdrop.active {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Base Image & Media Responsiveness */
+img, video, canvas, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Touch Friendly Targets */
+button, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* TABLET & SMALL LAPTOP LAYOUT BREAKPOINT (<= 1024px) */
+@media (max-width: 1024px) {
+  html, body {
+    height: 100%;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .header-bar {
+    padding: 0.65rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .brand-title h1 {
+    font-size: 1rem;
+  }
+
+  .global-search-container {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    margin: 0.25rem 0 0 0;
+  }
+
+  .header-controls {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .shift-timer-card, .duty-badge-wrapper, .clock-display {
+    padding: 0.3rem 0.65rem;
+    font-size: 0.78rem;
+  }
+
+  .app-container {
+    height: auto;
+    min-height: calc(100vh - 100px);
+    overflow: visible;
+  }
+
+  /* Sidebar Drawer Overlay */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 280px;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 9999;
+    box-shadow: 5px 0 30px rgba(0, 0, 0, 0.8);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #0f172a;
+    padding-top: 1.25rem;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .main-content {
+    padding: 1rem 1rem;
+    overflow-y: visible;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .radio-page-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .penal-code-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .patrol-gen-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* SMARTPHONE BREAKPOINT (<= 768px) */
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+
+  .brand-logo-img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-title h1 {
+    font-size: 0.92rem;
+  }
+
+  .header-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .clock-display {
+    display: none;
+  }
+
+  .shift-timer-card {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .duty-badge-wrapper {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Section Header Flex */
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .section-header .header-actions {
+    width: 100%;
+  }
+
+  .btn-pdf-export {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* CoC Category Filter Scrollable Bar */
+  #cocCategoryFilterContainer {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  #cocCategoryFilterContainer button {
+    flex-shrink: 0;
+  }
+
+  /* Chain of Command Personnel Cards */
+  .coc-grid {
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+
+  .coc-card {
+    padding: 0.85rem !important;
+  }
+
+  /* Responsive Scrollable Tables */
+  table, .callsign-table, .fine-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Floating Scroll-To-Top Button */
+  .cheat-scroll-btn {
+    right: 1rem;
+    bottom: 1.25rem;
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/* COMPACT PHONE SCREENS (<= 480px) */
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.85rem 0.6rem;
+  }
+
+  .coc-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .search-shortcut-badge {
+    display: none;
+  }
+
+  .multi-tab-switcher-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
