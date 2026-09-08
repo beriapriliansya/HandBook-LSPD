@@ -8,20 +8,50 @@
 
   <!-- Google Fonts & FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=2.2">
 </head>
 
 <body>
 
   <!-- TOP HEADER BAR -->
   <header class="header-bar">
-    <div class="brand-section">
-      <button id="mobileMenuBtn" class="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Toggle Mobile Menu">
-        <i class="fa-solid fa-bars"></i>
-      </button>
-      <img src="img/lspd_logo.png" alt="LSPD Official Logo" class="brand-logo-img">
-      <div class="brand-title">
-        <h1 id="headerTabTitle">Beranda LSPD</h1>
+    <div class="header-top-row">
+      <div class="brand-section">
+        <button id="mobileMenuBtn" class="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Toggle Mobile Menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <img src="img/lspd_logo.png" alt="LSPD Official Logo" class="brand-logo-img">
+        <div class="brand-title">
+          <h1 id="headerTabTitle">Beranda LSPD</h1>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Duty Status Badge -->
+        <div class="duty-badge-wrapper">
+          <div id="dutyDot" class="status-dot"></div>
+          <select id="dutyStatusSelect" class="duty-select" title="Pilih Status Ditolak/Diterima">
+            <option value="10-8">10-8 | ON DUTY</option>
+            <option value="10-6">10-6 | BUSY / CODE 6</option>
+            <option value="10-7">10-7 | OFF DUTY</option>
+          </select>
+        </div>
+
+        <!-- Shift Duty Timer -->
+        <div class="shift-timer-card">
+          <i class="fa-solid fa-stopwatch"></i>
+          <span>SHIFT: </span>
+          <strong id="shiftTimerDisplay">00:00:00</strong>
+          <button id="toggleTimerBtn" class="timer-btn" title="Start/Pause Shift Timer"><i
+              class="fa-solid fa-play"></i></button>
+          <button id="resetTimerBtn" class="timer-btn" title="Reset Timer"><i
+              class="fa-solid fa-rotate-right"></i></button>
+        </div>
+
+        <!-- Realtime Clock -->
+        <div class="clock-display" id="clockDisplay">
+          <i class="fa-regular fa-clock"></i> 00:08:10 WIB
+        </div>
       </div>
     </div>
 
@@ -48,34 +78,6 @@
         <div id="globalSearchResultsList" class="search-results-list">
           <!-- Rendered dynamically via JavaScript -->
         </div>
-      </div>
-    </div>
-
-    <div class="header-controls">
-      <!-- Duty Status Badge -->
-      <div class="duty-badge-wrapper">
-        <div id="dutyDot" class="status-dot"></div>
-        <select id="dutyStatusSelect" class="duty-select" title="Pilih Status Ditolak/Diterima">
-          <option value="10-8">10-8 | ON DUTY</option>
-          <option value="10-6">10-6 | BUSY / CODE 6</option>
-          <option value="10-7">10-7 | OFF DUTY</option>
-        </select>
-      </div>
-
-      <!-- Shift Duty Timer -->
-      <div class="shift-timer-card">
-        <i class="fa-solid fa-stopwatch"></i>
-        <span>SHIFT: </span>
-        <strong id="shiftTimerDisplay">00:00:00</strong>
-        <button id="toggleTimerBtn" class="timer-btn" title="Start/Pause Shift Timer"><i
-            class="fa-solid fa-play"></i></button>
-        <button id="resetTimerBtn" class="timer-btn" title="Reset Timer"><i
-            class="fa-solid fa-rotate-right"></i></button>
-      </div>
-
-      <!-- Realtime Clock -->
-      <div class="clock-display" id="clockDisplay">
-        <i class="fa-regular fa-clock"></i> 00:08:10 WIB
       </div>
     </div>
   </header>
