@@ -2285,3 +2285,65 @@ ${evidencesBbcodeStr}
     window.renderChainOfCommand();
   }
 });
+
+
+/* ==========================================================================
+   PENAL CODE CARDS REALTIME FILTER & SEARCH ENGINE
+   ========================================================================== */
+let currentPenalCardCategory = 'ALL';
+
+window.filterPenalCards = function(category, btnEl) {
+  currentPenalCardCategory = category;
+
+  if (btnEl && btnEl.parentElement) {
+    btnEl.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+  }
+
+  const searchInput = document.getElementById('penalCardSearchInput');
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+  window.applyPenalCardsFilter(query, category);
+};
+
+window.searchPenalCards = function(query) {
+  window.applyPenalCardsFilter(query.toLowerCase().trim(), currentPenalCardCategory);
+};
+
+window.applyPenalCardsFilter = function(query, category) {
+  const cards = document.querySelectorAll('#penalRefCardsGrid .penal-ref-card');
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const cardCategory = card.getAttribute('data-category') || '';
+    const cardText = card.getAttribute('data-text') || '';
+
+    const matchesCategory = (category === 'ALL' || cardCategory === category);
+    const matchesQuery = !query || cardText.includes(query);
+
+    if (matchesCategory && matchesQuery) {
+      card.style.display = 'flex';
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+
+  const grid = document.getElementById('penalRefCardsGrid');
+  if (grid) {
+    let noResultMsg = document.getElementById('penalCardsNoResult');
+    if (visibleCount === 0) {
+      if (!noResultMsg) {
+        noResultMsg = document.createElement('div');
+        noResultMsg.id = 'penalCardsNoResult';
+        noResultMsg.style.cssText = 'grid-column:1/-1; text-align:center; padding:2.5rem 1rem; color:var(--text-muted); background:rgba(15,23,42,0.6); border:1px solid var(--border-color); border-radius:var(--radius-sm);';
+        noResultMsg.innerHTML = '<i class="fa-solid fa-scale-unbalanced" style="font-size:2rem; color:var(--color-warning); margin-bottom:0.5rem; display:block;"></i><h4 style="color:#ffffff;">Pasal Tidak Ditemukan</h4><p style="font-size:0.82rem;">Coba ubah kata kunci atau pilih kategori pasal lainnya.</p>';
+        grid.appendChild(noResultMsg);
+      } else {
+        noResultMsg.style.display = 'block';
+      }
+    } else if (noResultMsg) {
+      noResultMsg.style.display = 'none';
+    }
+  }
+};

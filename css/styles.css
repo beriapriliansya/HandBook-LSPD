@@ -3656,3 +3656,83 @@ button, input, select, textarea {
     align-items: flex-start;
   }
 }
+
+
+/* ==========================================================================
+   OFFICIAL PENAL CODE CARDS SYSTEM (EXACT MATCH TO REFERENCE SCREENSHOTS)
+   ========================================================================== */
+.penal-ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 1.1rem;
+}
+
+.penal-ref-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.penal-ref-card:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.penal-ref-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-weight: 800;
+  font-size: 0.86rem;
+  color: #ffffff;
+  margin-bottom: 0.65rem;
+  line-height: 1.35;
+  letter-spacing: 0.2px;
+}
+
+.status-dot-badge {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+  display: inline-block;
+}
+.dot-green { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.6); }
+.dot-red { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+.dot-blue { background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.6); }
+.dot-yellow { background: #eab308; box-shadow: 0 0 8px rgba(234, 179, 8, 0.6); }
+
+.penal-ref-code {
+  color: #f8fafc;
+  word-break: break-word;
+}
+
+.penal-ref-body {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.48;
+  margin-bottom: 0.85rem;
+  flex: 1;
+}
+
+.penal-ref-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: #cbd5e1;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 0.65rem;
+}
+
+.penal-fine strong { color: #f59e0b; font-family: var(--font-mono); }
+.penal-sentence strong { color: #38bdf8; font-family: var(--font-mono); }
