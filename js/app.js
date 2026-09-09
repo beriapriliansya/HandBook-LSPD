@@ -2301,25 +2301,31 @@ window.filterPenalCards = function(category, btnEl) {
   }
 
   const searchInput = document.getElementById('penalCardSearchInput');
-  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const query = searchInput ? searchInput.value : '';
 
   window.applyPenalCardsFilter(query, category);
 };
 
 window.searchPenalCards = function(query) {
-  window.applyPenalCardsFilter(query.toLowerCase().trim(), currentPenalCardCategory);
+  window.applyPenalCardsFilter(query, currentPenalCardCategory);
 };
 
 window.applyPenalCardsFilter = function(query, category) {
   const cards = document.querySelectorAll('#penalRefCardsGrid .penal-ref-card');
   let visibleCount = 0;
 
+  const rawQuery = (query || '').toLowerCase().trim();
+  const queryWords = rawQuery ? rawQuery.split(/\s+/).filter(w => w.length > 0) : [];
+
   cards.forEach(card => {
     const cardCategory = card.getAttribute('data-category') || '';
     const cardText = card.getAttribute('data-text') || '';
+    const cardCode = card.getAttribute('data-code') || '';
+    const innerText = card.innerText || card.textContent || '';
+    const fullHaystack = (cardCategory + ' ' + cardText + ' ' + cardCode + ' ' + innerText).toLowerCase();
 
     const matchesCategory = (category === 'ALL' || cardCategory === category);
-    const matchesQuery = !query || cardText.includes(query);
+    const matchesQuery = queryWords.length === 0 || queryWords.every(word => fullHaystack.includes(word));
 
     if (matchesCategory && matchesQuery) {
       card.style.display = 'flex';
@@ -2347,3 +2353,16 @@ window.applyPenalCardsFilter = function(query, category) {
     }
   }
 };
+
+// Auto-bind input listeners on DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  const cardSearchInput = document.getElementById('penalCardSearchInput');
+  if (cardSearchInput) {
+    ['input', 'keyup', 'change', 'search'].forEach(evt => {
+      cardSearchInput.addEventListener(evt, () => {
+        window.searchPenalCards(cardSearchInput.value);
+      });
+    });
+  }
+});
+
