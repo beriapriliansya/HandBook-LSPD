@@ -2793,8 +2793,11 @@ window.calculateSmartPenal = function() {
     const pc = findRealPenalCode(p => p.fullTitle.includes('CLASS 3') || p.fullTitle.includes('RIFLE'));
     if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
   }
-  if (ammoQty >= 250) {
-    const pc = findRealPenalCode(p => p.fullTitle.includes('AMMUNITION SMUGGLING') || p.codeNumber.includes('(7)48'));
+  if (ammoQty >= 2000) {
+    const pc = findRealPenalCode(p => p.codeNumber.includes('(7)48') || p.fullTitle.includes('AMMUNITION SMUGGLING'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
+  } else if (ammoQty > 0) {
+    const pc = findRealPenalCode(p => p.codeNumber.includes('(7)19') || p.fullTitle.includes('UNLAWFUL POSSESSION OF AMMUNITION'));
     if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
   }
 
