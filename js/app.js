@@ -14,6 +14,7 @@ const TAB_SEQUENCE = [
   'proses-hukum',
   'alur-court-verdict',
   'penal-code-cheat',
+  'penal-calculator',
   'laporan-patroli',
   'kualifikasi-promosi'
 ];
@@ -93,6 +94,7 @@ window.switchTab = function(targetTab) {
       'proses-hukum': 'Proses Hukum & Miranda LSPD',
       'alur-court-verdict': 'Alur Court Verdict LSPD',
       'penal-code-cheat': 'Penal Code Cheat Sheet LSPD',
+      'penal-calculator': 'Kalkulator Penal Code & AI Prompt LSPD',
       'laporan-patroli': 'Laporan Patroli & Log LSPD',
       'kualifikasi-promosi': 'Kualifikasi Promosi LSPD'
     };
@@ -2365,4 +2367,533 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+/* ==========================================================================
+   SMART PENAL CODE & AI PROMPT CALCULATOR ENGINE (241 PASAL DYNAMIC SCANNER)
+   ========================================================================== */
+
+window.ALL_241_PENAL_CODES = [];
+window.manualSelectedCharges = new Set();
+window.aiDetectedCharges = new Set();
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+window.init241PenalCodesCatalog = function() {
+  const cards = document.querySelectorAll('#penalRefCardsGrid .penal-ref-card');
+  const catalog = [];
+  
+  cards.forEach((card, index) => {
+    const rawCode = card.getAttribute('data-code') || '';
+    const rawCategory = card.getAttribute('data-category') || '';
+    const rawText = card.getAttribute('data-text') || '';
+    
+    const codeEl = card.querySelector('.penal-ref-code');
+    const bodyEl = card.querySelector('.penal-ref-body');
+    const fineEl = card.querySelector('.penal-fine strong');
+    const sentenceEl = card.querySelector('.penal-sentence strong');
+    
+    const fullCodeTitle = codeEl ? codeEl.innerText.trim() : rawCode.toUpperCase();
+    const description = bodyEl ? bodyEl.innerText.trim() : rawText;
+    const fineText = fineEl ? fineEl.innerText.trim() : '$0';
+    const sentenceText = sentenceEl ? sentenceEl.innerText.trim() : '0 Bulan';
+    
+    let fineAmount = 0;
+    let isFineCourtVerdict = false;
+    if (fineText.toUpperCase().includes('COURT VERDICT')) {
+      isFineCourtVerdict = true;
+    } else {
+      fineAmount = parseInt(fineText.replace(/[^0-9]/g, '')) || 0;
+    }
+    
+    let sentenceMonths = 0;
+    let isSentenceCourtVerdict = false;
+    if (sentenceText.toUpperCase().includes('COURT VERDICT')) {
+      isSentenceCourtVerdict = true;
+    } else {
+      sentenceMonths = parseInt(sentenceText.replace(/[^0-9]/g, '')) || 0;
+    }
+    
+    const isCourtVerdict = isFineCourtVerdict || isSentenceCourtVerdict;
+    
+    let codeNumber = fullCodeTitle.split('.')[0].trim();
+    if (!codeNumber || codeNumber.length > 12) {
+      codeNumber = rawCode.split('.')[0].trim();
+    }
+    
+    catalog.push({
+      id: 'PC-241-' + index,
+      codeNumber: codeNumber,
+      fullTitle: fullCodeTitle,
+      category: rawCategory,
+      description: description,
+      fine: fineAmount,
+      sentenceMonths: sentenceMonths,
+      isCourtVerdict: isCourtVerdict,
+      searchHaystack: (fullCodeTitle + ' ' + description + ' ' + rawCategory + ' ' + rawText).toLowerCase()
+    });
+  });
+  
+  if (catalog.length === 0 && typeof DEFAULT_PENAL_CODES !== 'undefined') {
+    DEFAULT_PENAL_CODES.forEach((item, index) => {
+      catalog.push({
+        id: item.id || ('PC-DEF-' + index),
+        codeNumber: item.code || '',
+        fullTitle: (item.code + '. ' + item.title).toUpperCase(),
+        category: item.category || 'LAINNYA',
+        description: item.desc || '',
+        fine: item.fine || 0,
+        sentenceMonths: item.jailMonths || 0,
+        isCourtVerdict: item.isCourtVerdict || false,
+        searchHaystack: ((item.code || '') + ' ' + (item.title || '') + ' ' + (item.desc || '')).toLowerCase()
+      });
+    });
+  }
+
+  window.ALL_241_PENAL_CODES = catalog;
+  window.renderCalcPenalSelectorGrid();
+};
+
+window.renderCalcPenalSelectorGrid = function(filterQuery = '') {
+  const container = document.getElementById('calcPenalSelectorGrid');
+  if (!container) return;
+  
+  const queryWords = filterQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  container.innerHTML = '';
+  
+  let matchesCount = 0;
+  window.ALL_241_PENAL_CODES.forEach(pc => {
+    const isMatched = queryWords.length === 0 || queryWords.every(w => pc.searchHaystack.includes(w));
+    if (!isMatched) return;
+    
+    matchesCount++;
+    const isSelected = window.manualSelectedCharges.has(pc.id);
+    
+    const cardEl = document.createElement('div');
+    cardEl.className = `calc-selector-item ${isSelected ? 'selected' : ''}`;
+    cardEl.style.cssText = `
+      padding: 0.6rem 0.75rem;
+      background: ${isSelected ? 'rgba(59,130,246,0.25)' : 'rgba(15,23,42,0.7)'};
+      border: 1px solid ${isSelected ? '#3b82f6' : 'rgba(255,255,255,0.1)'};
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    `;
+    
+    const fineDisplay = pc.isCourtVerdict ? 'CV' : `$${pc.fine.toLocaleString()}`;
+    const sentenceDisplay = pc.isCourtVerdict ? 'CV' : `${pc.sentenceMonths}B`;
+    
+    cardEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+        <span style="font-weight:700; font-size:0.8rem; color:${isSelected ? '#60a5fa' : '#f8fafc'}; line-height:1.2;">
+          ${pc.fullTitle}
+        </span>
+        <span class="badge ${pc.isCourtVerdict ? 'badge-danger' : 'badge-info'}" style="font-size:0.7rem; padding:0.15rem 0.4rem; white-space:nowrap;">
+          ${fineDisplay} | ${sentenceDisplay}
+        </span>
+      </div>
+      <span style="font-size:0.72rem; color:var(--text-muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+        ${pc.description}
+      </span>
+    `;
+    
+    cardEl.onclick = () => {
+      if (window.manualSelectedCharges.has(pc.id)) {
+        window.manualSelectedCharges.delete(pc.id);
+      } else {
+        window.manualSelectedCharges.add(pc.id);
+      }
+      window.renderCalcPenalSelectorGrid(filterQuery);
+      window.calculateSmartPenal();
+    };
+    
+    container.appendChild(cardEl);
+  });
+
+  if (matchesCount === 0) {
+    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:1.5rem; color:var(--text-muted); font-size:0.85rem;">Tidak ada pasal yang cocok dengan "${filterQuery}".</div>`;
+  }
+};
+
+window.filterCalcPenalSelector = function(val) {
+  window.renderCalcPenalSelectorGrid(val);
+};
+
+window.processAiPenalPrompt = function() {
+  const promptEl = document.getElementById('aiPenalPrompt');
+  if (!promptEl) return;
+  
+  const text = promptEl.value.toLowerCase().trim();
+  window.aiDetectedCharges.clear();
+
+  if (!text) {
+    const badgeEl = document.getElementById('aiDetectedCountBadge');
+    if (badgeEl) badgeEl.textContent = '0 Pasal Terdeteksi';
+    window.calculateSmartPenal();
+    return;
+  }
+
+  window.ALL_241_PENAL_CODES.forEach(pc => {
+    if (pc.codeNumber) {
+      const cleanNum = pc.codeNumber.replace(/[()]/g, '');
+      const numRegex = new RegExp('(?:pasal\\s*)?(?:\\(' + escapeRegex(cleanNum) + '\\)|\\b' + escapeRegex(cleanNum) + '\\b)', 'i');
+      if (numRegex.test(text)) {
+        window.aiDetectedCharges.add(pc.id);
+        return;
+      }
+    }
+
+    const cleanTitle = pc.fullTitle.replace(/^\([^)]+\)\s*\d*\.?\s*/, '').toLowerCase();
+    if (cleanTitle.length > 4 && text.includes(cleanTitle)) {
+      window.aiDetectedCharges.add(pc.id);
+      return;
+    }
+  });
+
+  const keywordMap = [
+    { keywords: ['vest', 'rompi', 'heavy armor', 'armor'], fieldId: 'calcVestQty', defaultQty: 1 },
+    { keywords: ['carbine', 'ak47', 'rifle', 'assault rifle', 'senjata berat'], fieldId: 'calcClass3Qty', defaultQty: 1 },
+    { keywords: ['smg', 'micro smg', 'shotgun'], fieldId: 'calcClass2Qty', defaultQty: 1 },
+    { keywords: ['pistol', 'handgun', 'revolver'], fieldId: 'calcClass1Qty', defaultQty: 1 },
+    { keywords: ['evading', 'kabur', 'pengejaran', 'pursuit', 'ngebut'], fieldId: 'calcEvadingType', defaultValue: 'vehicle' },
+    { keywords: ['sandera', 'hostage', 'penculikan'], fieldId: 'calcHostagesQty', defaultQty: 1 }
+  ];
+
+  keywordMap.forEach(item => {
+    if (item.keywords.some(k => text.includes(k))) {
+      const el = document.getElementById(item.fieldId);
+      if (el) {
+        if (item.defaultValue && (!el.value || el.value === 'none')) {
+          el.value = item.defaultValue;
+        } else if (item.defaultQty && (!el.value || parseInt(el.value) === 0)) {
+          const match = text.match(new RegExp('(\\d+)\\s*(?:' + item.keywords.join('|') + ')', 'i'));
+          el.value = match ? parseInt(match[1]) : item.defaultQty;
+        }
+      }
+    }
+  });
+
+  const drugParsers = [
+    { keywords: ['weed', 'ganja'], fieldId: 'calcWeedQty' },
+    { keywords: ['meth', 'sabu'], fieldId: 'calcMethQty' },
+    { keywords: ['cocaine', 'kokain'], fieldId: 'calcCocaineQty' },
+    { keywords: ['opium'], fieldId: 'calcOpiumQty' }
+  ];
+
+  drugParsers.forEach(dp => {
+    dp.keywords.forEach(kw => {
+      const regex = new RegExp('(\\d+)(?:g|gram|kg)?\\s*' + kw + '|' + kw + '\\s*(\\d+)(?:g|gram|kg)?', 'i');
+      const m = text.match(regex);
+      if (m) {
+        const qty = parseInt(m[1] || m[2] || '0');
+        if (qty > 0) {
+          const el = document.getElementById(dp.fieldId);
+          if (el && (!el.value || parseInt(el.value) === 0)) {
+            el.value = qty;
+          }
+        }
+      }
+    });
+  });
+
+  const badgeEl = document.getElementById('aiDetectedCountBadge');
+  if (badgeEl) badgeEl.textContent = `${window.aiDetectedCharges.size} Pasal Terdeteksi`;
+
+  window.calculateSmartPenal();
+};
+
+window.clearAiPenalPrompt = function() {
+  const promptEl = document.getElementById('aiPenalPrompt');
+  if (promptEl) promptEl.value = '';
+  window.aiDetectedCharges.clear();
+  const badgeEl = document.getElementById('aiDetectedCountBadge');
+  if (badgeEl) badgeEl.textContent = '0 Pasal Terdeteksi';
+  window.calculateSmartPenal();
+};
+
+window.calculateSmartPenal = function() {
+  let totalFine = 0;
+  let totalMonths = 0;
+  let isCourtVerdictRequired = false;
+  
+  const activeChargesList = [];
+  const processedIds = new Set();
+
+  const combinedIds = new Set([...window.manualSelectedCharges, ...window.aiDetectedCharges]);
+  combinedIds.forEach(id => {
+    const pc = window.ALL_241_PENAL_CODES.find(item => item.id === id);
+    if (pc) {
+      activeChargesList.push(pc);
+      processedIds.add(pc.id);
+    }
+  });
+
+  const vestQty = parseInt(document.getElementById('calcVestQty')?.value) || 0;
+  const class1Qty = parseInt(document.getElementById('calcClass1Qty')?.value) || 0;
+  const class2Qty = parseInt(document.getElementById('calcClass2Qty')?.value) || 0;
+  const class3Qty = parseInt(document.getElementById('calcClass3Qty')?.value) || 0;
+  const ammoQty = parseInt(document.getElementById('calcAmmoQty')?.value) || 0;
+  const moneyQty = parseInt(document.getElementById('calcMoneyQty')?.value) || 0;
+  const weedQty = parseInt(document.getElementById('calcWeedQty')?.value) || 0;
+  const methQty = parseInt(document.getElementById('calcMethQty')?.value) || 0;
+  const cocaineQty = parseInt(document.getElementById('calcCocaineQty')?.value) || 0;
+  const opiumQty = parseInt(document.getElementById('calcOpiumQty')?.value) || 0;
+  const hostagesQty = parseInt(document.getElementById('calcHostagesQty')?.value) || 0;
+  const evadingType = document.getElementById('calcEvadingType')?.value || 'none';
+
+  const totalDrugs = weedQty + methQty + cocaineQty + opiumQty;
+  if (totalDrugs >= 4000) {
+    activeChargesList.push({
+      id: 'AUTO-DRUG-TRAFFICKING',
+      fullTitle: 'DRUG TRAFFICKING (TOTAL > 4000G)',
+      fine: 0,
+      sentenceMonths: 0,
+      isCourtVerdict: true,
+      description: `Total narkotika (${totalDrugs}g) melebihi 4000g. Memicu pasal Drug Trafficking (Court Verdict).`
+    });
+    isCourtVerdictRequired = true;
+  } else if (totalDrugs >= 2000) {
+    activeChargesList.push({
+      id: 'AUTO-DRUG-SMUGGLING',
+      fullTitle: 'DRUG SMUGGLING (TOTAL > 2000G)',
+      fine: 45000,
+      sentenceMonths: 50,
+      isCourtVerdict: false,
+      description: `Total narkotika (${totalDrugs}g) melebihi 2000g. Memicu pasal Drug Smuggling.`
+    });
+  } else if (totalDrugs >= 800) {
+    activeChargesList.push({
+      id: 'AUTO-DRUG-DISTRIBUTION',
+      fullTitle: 'DISTRIBUTION OF SCHEDULE CATEGORY (TOTAL > 800G)',
+      fine: 25000,
+      sentenceMonths: 35,
+      isCourtVerdict: false,
+      description: `Total narkotika (${totalDrugs}g) melebihi 800g. Memicu pasal Distribution.`
+    });
+  } else {
+    if (weedQty > 0 || opiumQty > 0) {
+      const sched1Total = weedQty + opiumQty;
+      if (sched1Total >= 60) {
+        activeChargesList.push({
+          id: 'AUTO-SCHED1-FELONY',
+          fullTitle: 'FELONY POSSESSION OF SCHEDULE I (WEED/OPIUM >= 60G)',
+          fine: 8000,
+          sentenceMonths: 15,
+          description: `Memiliki Schedule I (${sched1Total}g >= 60g).`
+        });
+      } else {
+        activeChargesList.push({
+          id: 'AUTO-SCHED1-MISD',
+          fullTitle: 'MISDEMEANOR POSSESSION OF SCHEDULE I (WEED/OPIUM < 60G)',
+          fine: 3000,
+          sentenceMonths: 5,
+          description: `Memiliki Schedule I (${sched1Total}g < 60g).`
+        });
+      }
+    }
+    if (methQty > 0 || cocaineQty > 0) {
+      const sched2Total = methQty + cocaineQty;
+      if (sched2Total >= 100) {
+        activeChargesList.push({
+          id: 'AUTO-SCHED2-FELONY',
+          fullTitle: 'FELONY POSSESSION OF SCHEDULE II (METH/COCAINE >= 100G)',
+          fine: 12000,
+          sentenceMonths: 20,
+          description: `Memiliki Schedule II (${sched2Total}g >= 100g).`
+        });
+      } else {
+        activeChargesList.push({
+          id: 'AUTO-SCHED2-MISD',
+          fullTitle: 'MISDEMEANOR POSSESSION OF SCHEDULE II (METH/COCAINE < 100G)',
+          fine: 4500,
+          sentenceMonths: 8,
+          description: `Memiliki Schedule II (${sched2Total}g < 100g).`
+        });
+      }
+    }
+  }
+
+  if (vestQty > 0) {
+    activeChargesList.push({
+      id: 'AUTO-VEST',
+      fullTitle: `POSSESSION OF HEAVY ARMOR VEST (${vestQty} UNIT)`,
+      fine: 5000 * vestQty,
+      sentenceMonths: 10 * vestQty,
+      description: `Memiliki ${vestQty} unit Heavy Armor Vest.`
+    });
+  }
+  if (class1Qty > 0) {
+    activeChargesList.push({
+      id: 'AUTO-CLASS1',
+      fullTitle: `POSSESSION OF CLASS 1 FIREARM (${class1Qty} UNIT)`,
+      fine: 10000 * class1Qty,
+      sentenceMonths: 15 * class1Qty,
+      description: `Memiliki ${class1Qty} unit senjata api Class 1.`
+    });
+  }
+  if (class2Qty > 0) {
+    activeChargesList.push({
+      id: 'AUTO-CLASS2',
+      fullTitle: `POSSESSION OF CLASS 2 FIREARM (${class2Qty} UNIT)`,
+      fine: 20000 * class2Qty,
+      sentenceMonths: 30 * class2Qty,
+      description: `Memiliki ${class2Qty} unit senjata api Class 2.`
+    });
+  }
+  if (class3Qty > 0) {
+    activeChargesList.push({
+      id: 'AUTO-CLASS3',
+      fullTitle: `POSSESSION OF CLASS 3 FIREARM (${class3Qty} UNIT)`,
+      fine: 35000 * class3Qty,
+      sentenceMonths: 45 * class3Qty,
+      description: `Memiliki ${class3Qty} unit senjata api Class 3 (Carbine Rifle/AK).`
+    });
+  }
+  if (ammoQty >= 250) {
+    activeChargesList.push({
+      id: 'AUTO-AMMO-SMUGGLING',
+      fullTitle: `AMMUNITION SMUGGLING (${ammoQty} BULLET)`,
+      fine: 15000,
+      sentenceMonths: 25,
+      description: `Membawa ${ammoQty} butir amunisi (>= 250 butir).`
+    });
+  }
+
+  if (hostagesQty > 0) {
+    activeChargesList.push({
+      id: 'AUTO-HOSTAGE',
+      fullTitle: `KIDNAPPING / HOSTAGE TAKING (${hostagesQty} PERSON)`,
+      fine: 15000 * hostagesQty,
+      sentenceMonths: 20 * hostagesQty,
+      description: `Menyandera ${hostagesQty} orang.`
+    });
+  }
+  if (evadingType === 'foot') {
+    activeChargesList.push({
+      id: 'AUTO-EVADING-FOOT',
+      fullTitle: 'EVADING POLICE OFFICER (ON FOOT)',
+      fine: 3000,
+      sentenceMonths: 10,
+      description: 'Melarikan diri dari petugas (pejalan kaki).'
+    });
+  } else if (evadingType === 'vehicle') {
+    activeChargesList.push({
+      id: 'AUTO-EVADING-VEHICLE',
+      fullTitle: 'EVADING POLICE OFFICER (IN VEHICLE)',
+      fine: 7500,
+      sentenceMonths: 20,
+      description: 'Melarikan diri dari petugas mengendarai kendaraan.'
+    });
+  }
+
+  const activeContainer = document.getElementById('activeChargesContainer');
+  if (activeContainer) {
+    activeContainer.innerHTML = '';
+    if (activeChargesList.length === 0) {
+      activeContainer.innerHTML = `<span style="color:var(--text-dim); font-size:0.85rem; font-style:italic;">Belum ada pasal terdeteksi atau dipilih.</span>`;
+    } else {
+      activeChargesList.forEach(charge => {
+        if (charge.isCourtVerdict) isCourtVerdictRequired = true;
+        totalFine += charge.fine || 0;
+        totalMonths += charge.sentenceMonths || 0;
+
+        const tagEl = document.createElement('span');
+        tagEl.className = 'badge badge-primary';
+        tagEl.style.cssText = 'padding:0.35rem 0.65rem; font-size:0.8rem; display:inline-flex; align-items:center; gap:0.4rem; background:rgba(59,130,246,0.2); border:1px solid #3b82f6; border-radius:4px; color:#93c5fd;';
+        tagEl.innerHTML = `
+          <span>${charge.fullTitle}</span>
+          ${charge.id.startsWith('PC-') ? `<button type="button" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:0; font-size:0.8rem;" onclick="removeManualCharge('${charge.id}')">&times;</button>` : ''}
+        `;
+        activeContainer.appendChild(tagEl);
+      });
+    }
+  }
+
+  const fineEl = document.getElementById('calcTotalFine');
+  const monthsEl = document.getElementById('calcTotalMonths');
+  const statusEl = document.getElementById('calcCaseStatusText');
+  const badgeCourt = document.getElementById('courtVerdictBadge');
+
+  if (fineEl) fineEl.textContent = isCourtVerdictRequired ? 'COURT VERDICT' : `$${totalFine.toLocaleString()}`;
+  if (monthsEl) monthsEl.textContent = isCourtVerdictRequired ? 'COURT VERDICT' : `${totalMonths} Bulan`;
+  
+  if (statusEl) {
+    if (isCourtVerdictRequired) {
+      statusEl.textContent = 'COURT VERDICT (PERSIDANGAN)';
+      statusEl.style.color = '#ef4444';
+    } else {
+      statusEl.textContent = 'Standard Processing';
+      statusEl.style.color = '#f59e0b';
+    }
+  }
+  
+  if (badgeCourt) {
+    badgeCourt.style.display = isCourtVerdictRequired ? 'inline-flex' : 'none';
+  }
+};
+
+window.removeManualCharge = function(id) {
+  window.manualSelectedCharges.delete(id);
+  window.aiDetectedCharges.delete(id);
+  window.renderCalcPenalSelectorGrid();
+  window.calculateSmartPenal();
+};
+
+window.resetSmartCalculator = function() {
+  window.manualSelectedCharges.clear();
+  window.aiDetectedCharges.clear();
+  
+  const promptEl = document.getElementById('aiPenalPrompt');
+  if (promptEl) promptEl.value = '';
+  
+  const fields = ['calcVestQty', 'calcClass1Qty', 'calcClass2Qty', 'calcClass3Qty', 'calcAmmoQty', 'calcMoneyQty', 'calcWeedQty', 'calcMethQty', 'calcCocaineQty', 'calcOpiumQty', 'calcHostagesQty'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '0';
+  });
+  
+  const evadingEl = document.getElementById('calcEvadingType');
+  if (evadingEl) evadingEl.value = 'none';
+
+  const badgeEl = document.getElementById('aiDetectedCountBadge');
+  if (badgeEl) badgeEl.textContent = '0 Pasal Terdeteksi';
+
+  window.renderCalcPenalSelectorGrid();
+  window.calculateSmartPenal();
+};
+
+window.copyCalculatorDiscordReport = function() {
+  const activeContainer = document.getElementById('activeChargesContainer');
+  const charges = [];
+  
+  if (activeContainer) {
+    const badges = activeContainer.querySelectorAll('.badge span:first-child');
+    badges.forEach(b => charges.push(b.innerText.trim()));
+  }
+
+  const fineText = document.getElementById('calcTotalFine')?.textContent || '$0';
+  const monthsText = document.getElementById('calcTotalMonths')?.textContent || '0 Bulan';
+  const statusText = document.getElementById('calcCaseStatusText')?.textContent || 'Standard Processing';
+
+  const report = `[LSPD ARREST & CHARGES REPORT]\nTanggal/Waktu: ${new Date().toLocaleString('id-ID')}\nStatus Kasus: ${statusText}\n\nDAFTAR PASAL TERPASANG:\n${charges.length > 0 ? charges.map(c => `- ${c}`).join('\n') : '- Tidak ada pasal terpasang'}\n\nTOTAL SANSI & HUKUMAN:\n- Total Denda: ${fineText}\n- Total Hukuman Penjara: ${monthsText}`;
+
+  navigator.clipboard.writeText(report).then(() => {
+    alert('Format Laporan Discord / Forum MDC berhasil disalin ke clipboard!');
+  }).catch(() => {
+    alert('Format Laporan:\n\n' + report);
+  });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    if (typeof window.init241PenalCodesCatalog === 'function') {
+      window.init241PenalCodesCatalog();
+    }
+  }, 500);
+});
+
 
