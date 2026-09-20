@@ -2797,7 +2797,7 @@ window.calculateSmartPenal = function() {
     const pc = findRealPenalCode(p => p.codeNumber.includes('(7)48') || p.fullTitle.includes('AMMUNITION SMUGGLING'));
     if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
   } else if (ammoQty > 0) {
-    const pc = findRealPenalCode(p => p.codeNumber.includes('(7)19') || p.fullTitle.includes('UNLAWFUL POSSESSION OF AMMUNITION'));
+    const pc = findRealPenalCode(p => p.codeNumber.includes('(7)20') || p.fullTitle.includes('ILLEGAL DISTRIBUTION OF AMMUNITION'));
     if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
   }
 
