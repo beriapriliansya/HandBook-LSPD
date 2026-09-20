@@ -2701,10 +2701,23 @@ window.calculateSmartPenal = function() {
   const activeChargesList = [];
   const processedIds = new Set();
 
+  const findRealPenalCode = function(keywordOrFunc) {
+    if (!window.ALL_241_PENAL_CODES || window.ALL_241_PENAL_CODES.length === 0) return null;
+    return window.ALL_241_PENAL_CODES.find(pc => {
+      const haystack = (pc.codeNumber + ' ' + pc.fullTitle + ' ' + pc.description).toLowerCase();
+      if (typeof keywordOrFunc === 'string') {
+        return haystack.includes(keywordOrFunc.toLowerCase());
+      } else if (typeof keywordOrFunc === 'function') {
+        return keywordOrFunc(pc, haystack);
+      }
+      return false;
+    }) || null;
+  };
+
   const combinedIds = new Set([...window.manualSelectedCharges, ...window.aiDetectedCharges]);
   combinedIds.forEach(id => {
     const pc = window.ALL_241_PENAL_CODES.find(item => item.id === id);
-    if (pc) {
+    if (pc && !processedIds.has(pc.id)) {
       activeChargesList.push(pc);
       processedIds.add(pc.id);
     }
@@ -2725,147 +2738,64 @@ window.calculateSmartPenal = function() {
 
   const totalDrugs = weedQty + methQty + cocaineQty + opiumQty;
   if (totalDrugs >= 4000) {
-    activeChargesList.push({
-      id: 'AUTO-DRUG-TRAFFICKING',
-      fullTitle: 'DRUG TRAFFICKING (TOTAL > 4000G)',
-      fine: 0,
-      sentenceMonths: 0,
-      isCourtVerdict: true,
-      description: `Total narkotika (${totalDrugs}g) melebihi 4000g. Memicu pasal Drug Trafficking (Court Verdict).`
-    });
-    isCourtVerdictRequired = true;
+    const pc = findRealPenalCode(p => p.fullTitle.includes('DRUG TRAFFICKING') || p.codeNumber.includes('(6)05'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
   } else if (totalDrugs >= 2000) {
-    activeChargesList.push({
-      id: 'AUTO-DRUG-SMUGGLING',
-      fullTitle: 'DRUG SMUGGLING (TOTAL > 2000G)',
-      fine: 45000,
-      sentenceMonths: 50,
-      isCourtVerdict: false,
-      description: `Total narkotika (${totalDrugs}g) melebihi 2000g. Memicu pasal Drug Smuggling.`
-    });
+    const pc = findRealPenalCode(p => p.fullTitle.includes('DRUG SMUGGLING') || p.codeNumber.includes('(6)04'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
   } else if (totalDrugs >= 800) {
-    activeChargesList.push({
-      id: 'AUTO-DRUG-DISTRIBUTION',
-      fullTitle: 'DISTRIBUTION OF SCHEDULE CATEGORY (TOTAL > 800G)',
-      fine: 25000,
-      sentenceMonths: 35,
-      isCourtVerdict: false,
-      description: `Total narkotika (${totalDrugs}g) melebihi 800g. Memicu pasal Distribution.`
-    });
+    const pc = findRealPenalCode(p => p.fullTitle.includes('DISTRIBUTION OF SCHEDULE') || p.codeNumber.includes('(6)03'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
   } else {
     if (weedQty > 0 || opiumQty > 0) {
       const sched1Total = weedQty + opiumQty;
-      if (sched1Total >= 60) {
-        activeChargesList.push({
-          id: 'AUTO-SCHED1-FELONY',
-          fullTitle: 'FELONY POSSESSION OF SCHEDULE I (WEED/OPIUM >= 60G)',
-          fine: 8000,
-          sentenceMonths: 15,
-          description: `Memiliki Schedule I (${sched1Total}g >= 60g).`
-        });
-      } else {
-        activeChargesList.push({
-          id: 'AUTO-SCHED1-MISD',
-          fullTitle: 'MISDEMEANOR POSSESSION OF SCHEDULE I (WEED/OPIUM < 60G)',
-          fine: 3000,
-          sentenceMonths: 5,
-          description: `Memiliki Schedule I (${sched1Total}g < 60g).`
-        });
-      }
+      const pc = findRealPenalCode(p => p.fullTitle.includes('SCHEDULE I') && (sched1Total >= 60 ? p.fullTitle.includes('FELONY') : p.fullTitle.includes('MISDEMEANOR')));
+      if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
     }
     if (methQty > 0 || cocaineQty > 0) {
       const sched2Total = methQty + cocaineQty;
-      if (sched2Total >= 100) {
-        activeChargesList.push({
-          id: 'AUTO-SCHED2-FELONY',
-          fullTitle: 'FELONY POSSESSION OF SCHEDULE II (METH/COCAINE >= 100G)',
-          fine: 12000,
-          sentenceMonths: 20,
-          description: `Memiliki Schedule II (${sched2Total}g >= 100g).`
-        });
-      } else {
-        activeChargesList.push({
-          id: 'AUTO-SCHED2-MISD',
-          fullTitle: 'MISDEMEANOR POSSESSION OF SCHEDULE II (METH/COCAINE < 100G)',
-          fine: 4500,
-          sentenceMonths: 8,
-          description: `Memiliki Schedule II (${sched2Total}g < 100g).`
-        });
-      }
+      const pc = findRealPenalCode(p => p.fullTitle.includes('SCHEDULE II') && (sched2Total >= 100 ? p.fullTitle.includes('FELONY') : p.fullTitle.includes('MISDEMEANOR')));
+      if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
     }
   }
 
-  if (vestQty > 0) {
-    activeChargesList.push({
-      id: 'AUTO-VEST',
-      fullTitle: `POSSESSION OF HEAVY ARMOR VEST (${vestQty} UNIT)`,
-      fine: 5000 * vestQty,
-      sentenceMonths: 10 * vestQty,
-      description: `Memiliki ${vestQty} unit Heavy Armor Vest.`
-    });
-  }
-  if (class1Qty > 0) {
-    activeChargesList.push({
-      id: 'AUTO-CLASS1',
-      fullTitle: `POSSESSION OF CLASS 1 FIREARM (${class1Qty} UNIT)`,
-      fine: 10000 * class1Qty,
-      sentenceMonths: 15 * class1Qty,
-      description: `Memiliki ${class1Qty} unit senjata api Class 1.`
-    });
-  }
-  if (class2Qty > 0) {
-    activeChargesList.push({
-      id: 'AUTO-CLASS2',
-      fullTitle: `POSSESSION OF CLASS 2 FIREARM (${class2Qty} UNIT)`,
-      fine: 20000 * class2Qty,
-      sentenceMonths: 30 * class2Qty,
-      description: `Memiliki ${class2Qty} unit senjata api Class 2.`
-    });
-  }
-  if (class3Qty > 0) {
-    activeChargesList.push({
-      id: 'AUTO-CLASS3',
-      fullTitle: `POSSESSION OF CLASS 3 FIREARM (${class3Qty} UNIT)`,
-      fine: 35000 * class3Qty,
-      sentenceMonths: 45 * class3Qty,
-      description: `Memiliki ${class3Qty} unit senjata api Class 3 (Carbine Rifle/AK).`
-    });
-  }
-  if (ammoQty >= 250) {
-    activeChargesList.push({
-      id: 'AUTO-AMMO-SMUGGLING',
-      fullTitle: `AMMUNITION SMUGGLING (${ammoQty} BULLET)`,
-      fine: 15000,
-      sentenceMonths: 25,
-      description: `Membawa ${ammoQty} butir amunisi (>= 250 butir).`
-    });
+  if (hostagesQty > 0) {
+    if (hostagesQty >= 3) {
+      const pc = findRealPenalCode(p => p.fullTitle.includes('AGGRAVATED HOSTAGES') || p.codeNumber.includes('(1)25'));
+      if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
+    } else {
+      const pc = findRealPenalCode(p => (p.fullTitle.includes('HOSTAGES') && !p.fullTitle.includes('AGGRAVATED')) || p.codeNumber.includes('(1)24'));
+      if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
+    }
   }
 
-  if (hostagesQty > 0) {
-    activeChargesList.push({
-      id: 'AUTO-HOSTAGE',
-      fullTitle: `KIDNAPPING / HOSTAGE TAKING (${hostagesQty} PERSON)`,
-      fine: 15000 * hostagesQty,
-      sentenceMonths: 20 * hostagesQty,
-      description: `Menyandera ${hostagesQty} orang.`
-    });
-  }
   if (evadingType === 'foot') {
-    activeChargesList.push({
-      id: 'AUTO-EVADING-FOOT',
-      fullTitle: 'EVADING POLICE OFFICER (ON FOOT)',
-      fine: 3000,
-      sentenceMonths: 10,
-      description: 'Melarikan diri dari petugas (pejalan kaki).'
-    });
+    const pc = findRealPenalCode(p => p.fullTitle.includes('EVADING') || p.fullTitle.includes('RESISTING'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
   } else if (evadingType === 'vehicle') {
-    activeChargesList.push({
-      id: 'AUTO-EVADING-VEHICLE',
-      fullTitle: 'EVADING POLICE OFFICER (IN VEHICLE)',
-      fine: 7500,
-      sentenceMonths: 20,
-      description: 'Melarikan diri dari petugas mengendarai kendaraan.'
-    });
+    const pc = findRealPenalCode(p => (p.fullTitle.includes('EVADING') && p.fullTitle.includes('VEHICLE')) || p.fullTitle.includes('RECKLESS DRIVING'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
+  }
+
+  if (vestQty > 0) {
+    const pc = findRealPenalCode(p => p.fullTitle.includes('ARMOR') || p.fullTitle.includes('VEST') || p.description.includes('rompi'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
+  }
+  if (class1Qty > 0) {
+    const pc = findRealPenalCode(p => p.fullTitle.includes('CLASS 1') || p.fullTitle.includes('FIREARM'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
+  }
+  if (class2Qty > 0) {
+    const pc = findRealPenalCode(p => p.fullTitle.includes('CLASS 2') || p.fullTitle.includes('AUTOMATIC'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
+  }
+  if (class3Qty > 0) {
+    const pc = findRealPenalCode(p => p.fullTitle.includes('CLASS 3') || p.fullTitle.includes('RIFLE'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
+  }
+  if (ammoQty >= 250) {
+    const pc = findRealPenalCode(p => p.fullTitle.includes('AMMUNITION SMUGGLING') || p.codeNumber.includes('(7)48'));
+    if (pc && !processedIds.has(pc.id)) { activeChargesList.push(pc); processedIds.add(pc.id); }
   }
 
   const activeContainer = document.getElementById('activeChargesContainer');
@@ -2884,7 +2814,7 @@ window.calculateSmartPenal = function() {
         tagEl.style.cssText = 'padding:0.35rem 0.65rem; font-size:0.8rem; display:inline-flex; align-items:center; gap:0.4rem; background:rgba(59,130,246,0.2); border:1px solid #3b82f6; border-radius:4px; color:#93c5fd;';
         tagEl.innerHTML = `
           <span>${charge.fullTitle}</span>
-          ${charge.id.startsWith('PC-') ? `<button type="button" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:0; font-size:0.8rem;" onclick="removeManualCharge('${charge.id}')">&times;</button>` : ''}
+          <button type="button" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:0; font-size:0.8rem;" onclick="removeManualCharge('${charge.id}')">&times;</button>
         `;
         activeContainer.appendChild(tagEl);
       });
