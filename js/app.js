@@ -2855,9 +2855,6 @@ window.resetSmartCalculator = function() {
   window.manualSelectedCharges.clear();
   window.aiDetectedCharges.clear();
   
-  const promptEl = document.getElementById('aiPenalPrompt');
-  if (promptEl) promptEl.value = '';
-  
   const fields = ['calcVestQty', 'calcClass1Qty', 'calcClass2Qty', 'calcClass3Qty', 'calcAmmoQty', 'calcMoneyQty', 'calcWeedQty', 'calcMethQty', 'calcCocaineQty', 'calcOpiumQty', 'calcHostagesQty'];
   fields.forEach(id => {
     const el = document.getElementById(id);
@@ -2866,9 +2863,6 @@ window.resetSmartCalculator = function() {
   
   const evadingEl = document.getElementById('calcEvadingType');
   if (evadingEl) evadingEl.value = 'none';
-
-  const badgeEl = document.getElementById('aiDetectedCountBadge');
-  if (badgeEl) badgeEl.textContent = '0 Pasal Terdeteksi';
 
   window.renderCalcPenalSelectorGrid();
   window.calculateSmartPenal();

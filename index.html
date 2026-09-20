@@ -6332,121 +6332,89 @@
     </div>
   </div>
 
-            </div>
-          </div>
-
-</section>
-
-        <!-- ================= KALKULATOR PENAL CODE & AI PROMPT ================= -->
+          <!-- ================= KALKULATOR PENAL CODE ================= -->
         <section id="tab-penal-calculator" class="tab-content">
           <div class="section-header">
             <div class="section-title">
-              <h2>Kalkulator Penal Code & AI Prompt Assistant</h2>
-              <span>SMART PARSER KRONOLOGI RP, EVIDENCES BUILDER, & REALTIME 241 PASAL CALCULATOR</span>
-            </div>
-          </div>
-
-          <!-- AI Smart Prompt Assistant Section -->
-          <div class="card card-neon-border mb-4">
-            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-              <h3 style="margin:0; font-size:1.1rem; color:var(--color-gold);">
-                <i class="fa-solid fa-brain" style="color:#60a5fa;"></i> AI Smart Prompt Assistant (Ketik Kronologi RP)
-              </h3>
-              <span class="badge badge-info" id="aiDetectedCountBadge">0 Pasal Terdeteksi</span>
-            </div>
-            <div class="card-body">
-              <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.75rem;">
-                Ketik cerita kronologi/barang bukti di bawah ini (misal: <em>"suspect bawa 2 vest, 500g weed, 1500g meth, 1 carbine rifle, evading naik mobil, bawa 2 hostage, rampok bank, dan nembak polisi"</em>). Sistem akan mendeteksi pasal dari katalog 241 Penal Code secara otomatis!
-              </p>
-              <div class="form-group" style="margin-bottom:0.5rem;">
-                <textarea id="aiPenalPrompt" class="form-control-neon" rows="3" 
-                  placeholder="Ketik bebas kronologi/barang bukti di sini... (Otomatis deteksi pasal & barang bukti)"
-                  oninput="processAiPenalPrompt()"></textarea>
-              </div>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <small style="color:var(--text-dim); font-size:0.75rem;">
-                  <i class="fa-solid fa-circle-info"></i> Mendukung pencarian angka pasal `(1)02`, `1.02`, `(4)01` & kata kunci kejahatan.
-                </small>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="clearAiPenalPrompt()">
-                  <i class="fa-solid fa-eraser"></i> Bersihkan Teks
-                </button>
-              </div>
+              <h2>Kalkulator Penal Code & Barang Bukti</h2>
+              <span>KALKULASI OTOMATIS BARANG BUKTI, NARKOTIKA, SANDERA, & KATALOG 241 PASAL LSPD</span>
             </div>
           </div>
 
           <!-- Evidence & Contraband Quantity Builder Grid -->
-          <div class="card mb-4">
+          <div class="card card-neon-border mb-4">
             <div class="card-header">
-              <h3 style="margin:0; font-size:1rem; color:#f59e0b;">
-                <i class="fa-solid fa-boxes-stacked"></i> Input Barang Bukti & Kontraband
+              <h3 style="margin:0; font-size:1.05rem; color:var(--color-gold);">
+                <i class="fa-solid fa-boxes-stacked" style="color:#f59e0b;"></i> Input Barang Bukti & Kontraband Utama
               </h3>
             </div>
             <div class="card-body">
-              <div class="form-grid-3" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
+              <div class="form-grid-3" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1.1rem;">
+                
+                <!-- Sandera (Hostages) -->
+                <div class="form-group" style="background:rgba(15,23,42,0.6); padding:0.75rem; border-radius:8px; border:1px solid rgba(245,158,11,0.3);">
+                  <label style="font-size:0.82rem; color:#fde047; font-weight:600;"><i class="fa-solid fa-user-lock"></i> Jumlah Sandera (Hostages)</label>
+                  <input type="number" id="calcHostagesQty" class="form-control-neon" min="0" value="0" placeholder="0 Orang" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                </div>
+
+                <!-- Weed / Ganja Grams -->
+                <div class="form-group" style="background:rgba(15,23,42,0.6); padding:0.75rem; border-radius:8px; border:1px solid rgba(52,211,153,0.3);">
+                  <label style="font-size:0.82rem; color:#86efac; font-weight:600;"><i class="fa-solid fa-cannabis"></i> Weed / Ganja (Gram)</label>
+                  <input type="number" id="calcWeedQty" class="form-control-neon" min="0" value="0" placeholder="0 Gram" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                </div>
+
+                <!-- Meth / Sabu Grams -->
+                <div class="form-group" style="background:rgba(15,23,42,0.6); padding:0.75rem; border-radius:8px; border:1px solid rgba(96,165,250,0.3);">
+                  <label style="font-size:0.82rem; color:#93c5fd; font-weight:600;"><i class="fa-solid fa-pills"></i> Meth / Sabu (Gram)</label>
+                  <input type="number" id="calcMethQty" class="form-control-neon" min="0" value="0" placeholder="0 Gram" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                </div>
+
+                <!-- Cocaine Grams -->
+                <div class="form-group" style="background:rgba(15,23,42,0.6); padding:0.75rem; border-radius:8px; border:1px solid rgba(192,132,252,0.3);">
+                  <label style="font-size:0.82rem; color:#e9d5ff; font-weight:600;"><i class="fa-solid fa-capsules"></i> Cocaine / Kokain (Gram)</label>
+                  <input type="number" id="calcCocaineQty" class="form-control-neon" min="0" value="0" placeholder="0 Gram" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                </div>
+
+                <!-- Opium Grams -->
+                <div class="form-group" style="background:rgba(15,23,42,0.6); padding:0.75rem; border-radius:8px; border:1px solid rgba(244,114,182,0.3);">
+                  <label style="font-size:0.82rem; color:#fbcfe8; font-weight:600;"><i class="fa-solid fa-vial"></i> Opium (Gram)</label>
+                  <input type="number" id="calcOpiumQty" class="form-control-neon" min="0" value="0" placeholder="0 Gram" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                </div>
+
                 <!-- Heavy Armor Vest -->
                 <div class="form-group">
                   <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-shield-halved"></i> Heavy Armor / Rompi Vest</label>
-                  <input type="number" id="calcVestQty" class="form-control-neon" min="0" value="0" placeholder="Jumlah Rompi" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                  <input type="number" id="calcVestQty" class="form-control-neon" min="0" value="0" placeholder="0 Rompi" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
                 </div>
 
                 <!-- Class 1 Firearm -->
                 <div class="form-group">
                   <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-gun"></i> Senjata Class 1 (Pistol)</label>
-                  <input type="number" id="calcClass1Qty" class="form-control-neon" min="0" value="0" placeholder="Jumlah Pistol" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                  <input type="number" id="calcClass1Qty" class="form-control-neon" min="0" value="0" placeholder="0 Pistol" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
                 </div>
 
                 <!-- Class 2 Firearm -->
                 <div class="form-group">
                   <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-gun"></i> Senjata Class 2 (SMG/Shotgun)</label>
-                  <input type="number" id="calcClass2Qty" class="form-control-neon" min="0" value="0" placeholder="Jumlah SMG" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                  <input type="number" id="calcClass2Qty" class="form-control-neon" min="0" value="0" placeholder="0 SMG" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
                 </div>
 
                 <!-- Class 3 Firearm -->
                 <div class="form-group">
-                  <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-gun"></i> Senjata Class 3 (Carbine Rifle/AK47)</label>
-                  <input type="number" id="calcClass3Qty" class="form-control-neon" min="0" value="0" placeholder="Jumlah Rifle" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                  <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-gun"></i> Senjata Class 3 (Carbine/AK)</label>
+                  <input type="number" id="calcClass3Qty" class="form-control-neon" min="0" value="0" placeholder="0 Rifle" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
                 </div>
 
                 <!-- Ammunition -->
                 <div class="form-group">
                   <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-bullseye"></i> Total Amunisi (Butir)</label>
-                  <input type="number" id="calcAmmoQty" class="form-control-neon" min="0" value="0" placeholder="Jumlah Peluru" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                  <input type="number" id="calcAmmoQty" class="form-control-neon" min="0" value="0" placeholder="0 Peluru" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
                 </div>
 
                 <!-- Illegal Money -->
                 <div class="form-group">
                   <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-money-bill-wave"></i> Uang Haram / Uang Merah ($)</label>
-                  <input type="number" id="calcMoneyQty" class="form-control-neon" min="0" value="0" placeholder="Nominal Uang ($)" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
-                </div>
-
-                <!-- Weed / Ganja Grams -->
-                <div class="form-group">
-                  <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-cannabis"></i> Weed / Ganja (Gram)</label>
-                  <input type="number" id="calcWeedQty" class="form-control-neon" min="0" value="0" placeholder="Gram Weed" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
-                </div>
-
-                <!-- Meth / Sabu Grams -->
-                <div class="form-group">
-                  <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-pills"></i> Meth / Sabu (Gram)</label>
-                  <input type="number" id="calcMethQty" class="form-control-neon" min="0" value="0" placeholder="Gram Meth" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
-                </div>
-
-                <!-- Cocaine Grams -->
-                <div class="form-group">
-                  <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-capsules"></i> Cocaine / Kokain (Gram)</label>
-                  <input type="number" id="calcCocaineQty" class="form-control-neon" min="0" value="0" placeholder="Gram Cocaine" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
-                </div>
-
-                <!-- Opium Grams -->
-                <div class="form-group">
-                  <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-vial"></i> Opium (Gram)</label>
-                  <input type="number" id="calcOpiumQty" class="form-control-neon" min="0" value="0" placeholder="Gram Opium" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
-                </div>
-
-                <!-- Hostages Count -->
-                <div class="form-group">
-                  <label style="font-size:0.8rem; color:#cbd5e1;"><i class="fa-solid fa-user-lock"></i> Jumlah Sandera (Hostages)</label>
-                  <input type="number" id="calcHostagesQty" class="form-control-neon" min="0" value="0" placeholder="Jumlah Orang" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
+                  <input type="number" id="calcMoneyQty" class="form-control-neon" min="0" value="0" placeholder="$0" onchange="calculateSmartPenal()" oninput="calculateSmartPenal()">
                 </div>
 
                 <!-- Pursuit / Evading -->
@@ -6458,6 +6426,7 @@
                     <option value="vehicle">Pengejaran Kendaraan (In Vehicle)</option>
                   </select>
                 </div>
+
               </div>
             </div>
           </div>
@@ -6511,7 +6480,7 @@
                 </div>
                 <div class="counter-box" style="background:rgba(15,23,42,0.6); padding:1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.1); text-align:center;">
                   <span style="font-size:0.8rem; color:var(--text-muted); display:block;">STATUS HASIL KASUS</span>
-                  <span id="calcCaseStatusText" style="font-size:1.1rem; font-weight:600; color:#f59e0b;">Standar Processing</span>
+                  <span id="calcCaseStatusText" style="font-size:1.1rem; font-weight:600; color:#f59e0b;">Standard Processing</span>
                 </div>
               </div>
 
@@ -7355,8 +7324,8 @@ I began coordinating and requesting additional units for backup. The pursuit con
   </div>
 
   <!-- JS Dependencies -->
-  <script src="js/data.js?v=5.2"></script>
-  <script src="js/app.js?v=5.2"></script>
+  <script src="js/data.js?v=6.0"></script>
+  <script src="js/app.js?v=6.0"></script>
 </body>
 
 </html>
