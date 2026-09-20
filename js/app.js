@@ -2537,6 +2537,61 @@ window.processAiPenalPrompt = function() {
     return;
   }
 
+  // Dictionary of Indonesian <-> English RP synonyms & concepts
+  const SYNONYM_MAP = {
+    'penembakan': ['shooting', 'murder', 'discharge', 'assault', 'pembunuhan', 'menembak', 'tembak'],
+    'nembak': ['shooting', 'murder', 'discharge', 'assault', 'pembunuhan', 'menembak', 'tembak'],
+    'tembak': ['shooting', 'murder', 'discharge', 'assault', 'pembunuhan', 'menembak', 'tembak'],
+    'menembak': ['shooting', 'murder', 'discharge', 'assault', 'pembunuhan', 'tembak'],
+    'shooting': ['shooting', 'murder', 'discharge', 'assault', 'pembunuhan', 'menembak'],
+
+    'officer': ['officer', 'government', 'employee', 'petugas', 'polisi', 'law enforcement', 'leo'],
+    'polisi': ['officer', 'government', 'employee', 'petugas', 'polisi', 'law enforcement', 'leo'],
+    'petugas': ['officer', 'government', 'employee', 'petugas', 'polisi', 'law enforcement', 'leo'],
+    'cop': ['officer', 'government', 'employee', 'petugas', 'polisi', 'law enforcement'],
+    'leo': ['officer', 'government', 'employee', 'petugas', 'polisi', 'law enforcement'],
+
+    'rampok': ['robbery', 'rob', 'burglary', 'laundromat', 'bank', 'perampokan', 'begal'],
+    'perampokan': ['robbery', 'rob', 'burglary', 'laundromat', 'bank', 'begal'],
+    'robbery': ['robbery', 'rob', 'burglary', 'laundromat', 'bank', 'perampokan'],
+    'rob': ['robbery', 'rob', 'burglary', 'laundromat', 'bank', 'perampokan'],
+
+    'suap': ['bribe', 'bribery', 'suap', 'penyuapan'],
+    'penyuapan': ['bribe', 'bribery', 'suap', 'penyuapan'],
+    'bribe': ['bribe', 'bribery', 'suap', 'penyuapan'],
+    'bribery': ['bribe', 'bribery', 'suap', 'penyuapan'],
+
+    'sandera': ['hostage', 'hostages', 'kidnapping', 'abduction', 'penyanderaan', 'culik'],
+    'hostage': ['hostage', 'hostages', 'kidnapping', 'abduction', 'penyanderaan', 'sandera'],
+    'penculikan': ['hostage', 'hostages', 'kidnapping', 'abduction', 'penyanderaan', 'culik'],
+
+    'kabur': ['evading', 'pursuit', 'fleeing', 'pengejaran', 'eluding'],
+    'evading': ['evading', 'pursuit', 'fleeing', 'pengejaran', 'eluding'],
+    'pengejaran': ['evading', 'pursuit', 'fleeing', 'kabur', 'eluding'],
+
+    'ugal': ['reckless', 'speeding', 'ngebut', 'urakan'],
+    'reckless': ['reckless', 'speeding', 'ngebut', 'urakan'],
+    'speeding': ['reckless', 'speeding', 'ngebut', 'urakan'],
+
+    'rusak': ['destruction', 'vandalism', 'damage', 'merusak', 'pengrusakan', 'perusakan'],
+    'pengrusakan': ['destruction', 'vandalism', 'damage', 'merusak', 'perusakan'],
+    'vandalism': ['destruction', 'vandalism', 'damage', 'merusak', 'pengrusakan'],
+
+    'maling': ['theft', 'stealing', 'stolen', 'pencurian', 'mencuri', 'gta'],
+    'curi': ['theft', 'stealing', 'stolen', 'pencurian', 'mencuri', 'gta'],
+    'pencurian': ['theft', 'stealing', 'stolen', 'mencuri', 'maling', 'gta']
+  };
+
+  const rawWords = text.split(/[\s,.-]+/).filter(w => w.length > 1);
+
+  const expandedSearchTerms = new Set();
+  rawWords.forEach(w => {
+    expandedSearchTerms.add(w);
+    if (SYNONYM_MAP[w]) {
+      SYNONYM_MAP[w].forEach(syn => expandedSearchTerms.add(syn));
+    }
+  });
+
   window.ALL_241_PENAL_CODES.forEach(pc => {
     if (pc.codeNumber) {
       const cleanNum = pc.codeNumber.replace(/[()]/g, '');
@@ -2551,6 +2606,29 @@ window.processAiPenalPrompt = function() {
     if (cleanTitle.length > 4 && text.includes(cleanTitle)) {
       window.aiDetectedCharges.add(pc.id);
       return;
+    }
+
+    const isShootingPrompt = rawWords.some(w => ['penembakan', 'nembak', 'tembak', 'menembak', 'shooting', 'gsw'].includes(w));
+    const isOfficerPrompt = rawWords.some(w => ['officer', 'polisi', 'petugas', 'leo', 'cop', 'aparat'].includes(w));
+
+    if (isShootingPrompt && isOfficerPrompt) {
+      if (pc.searchHaystack.includes('government employee') || pc.searchHaystack.includes('law enforcement') || pc.searchHaystack.includes('officer') || pc.searchHaystack.includes('petugas pemerintah')) {
+        if (pc.searchHaystack.includes('murder') || pc.searchHaystack.includes('pembunuhan') || pc.searchHaystack.includes('discharge') || pc.searchHaystack.includes('assault')) {
+          window.aiDetectedCharges.add(pc.id);
+          return;
+        }
+      }
+    }
+
+    let matchScore = 0;
+    expandedSearchTerms.forEach(term => {
+      if (term.length > 3 && pc.searchHaystack.includes(term)) {
+        matchScore++;
+      }
+    });
+
+    if (matchScore >= 2) {
+      window.aiDetectedCharges.add(pc.id);
     }
   });
 
